@@ -2,11 +2,84 @@
 <html lang="en">
 <head>
   <title>Our simple HTTP server</title>
+
   <link rel="stylesheet" type="text/css" href="/style.css">
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
   <script type="text/babel">
+    
+    let url = '/success';
+    let contentType = 'application/json';
+    
+    const handleResponse = (xhr) => {
+        // Get the Content-Type of the response
+        const type = xhr.getResponseHeader('content-type');
+        
+        // Get and clear the content section on our page
+        const content = document.querySelector("#content");
+        content.textContent = '';
+        
+        // Create lets for the h3 and p we will display
+        let h3 = document.createElement('h3');
+        let p = document.createElement('p');
+        
+        if(type === 'application/json') {
+            // Parse xhr.response
+            const obj = JSON.parse(xhr.response);
+            
+            // Set h3 to the id, or success if no id exists
+            obj.id ? h3.textContent = obj.id : h3.textContent = 'success';
+            
+            // Set p to the message
+            p.textContent = `Message: ${obj.message}`;
+            
+            // Print obj to the console as well
+            console.dir(obj);
+        } else if (type === 'text/xml') {
+            // Set h3 to the id, or success if no id exists
+            const id = xhr.responseXML.querySelector('id');
+            id ? h3.textContent = id.textContent : h3.textContent = 'success';
+            
+            p.textContent = `Message: ${xhr.responseXML.querySelector('message').textContent}`;
+            
+            // Print obj to the console as well
+            const obj = xhr.responseXML.querySelector('response').innerHTML;
+            console.dir(obj);
+        }
+        
+        // Append our h3 and p to our content
+        content.appendChild(h3);
+        content.appendChild(p);
+    };
+    
+    const sendAjax = (url, contentType) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', url);
+      xhr.setRequestHeader ("Accept", contentType);
 
+      xhr.onload = () => handleResponse(xhr);
+
+      xhr.send();
+    };
+
+    const init = () => {
+      const requestSelect = document.querySelector("#page");
+      requestSelect.onchange = (e) => {
+         url = e.target.value;
+      };
+        
+      const typeSelect = document.querySelector("#type");
+      typeSelect.onchange = (e) => {
+         contentType = e.target.value;
+      };
+        
+      const sendButton = document.querySelector("#send");
+      sendButton.onclick = (e) => {
+          sendAjax(url, contentType);
+      }
+    };
+
+    window.onload = init;
   </script>
 </head>
 <body>
